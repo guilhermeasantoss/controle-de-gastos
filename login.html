@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controle Financeiro – Login</title>
+  <link rel="shortcut icon" href="img/financial-profit.png" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="login-style.css" />
+</head>
+<body>
+
+<div class="auth-wrapper" id="authWrapper">
+
+  <!-- ══ FORM PANEL ══ -->
+  <div class="panel form-panel">
+    <div class="accent-bar"></div>
+
+    <!-- Login -->
+    <div class="form-login">
+      <div class="form-inner">
+        <div class="logo">
+          <div class="logo-mark">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 3L3 7.5V12C3 16.14 7.02 20.11 12 21C16.98 20.11 21 16.14 21 12V7.5L12 3Z" fill="white" fill-opacity="0.95"/>
+              <path d="M9 12l2 2 4-4" stroke="#3A86FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="logo-text">Controle Financeiro</span>
+        </div>
+
+        <div class="form-heading">Bem-vindo de volta</div>
+        <p class="form-sub">Acesse com seu usuário e senha</p>
+
+        <div class="field">
+          <label>Usuário</label>
+          <input id="login-user" type="text" placeholder="ex: pai" />
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input id="login-senha" type="password" placeholder="••••••••" />
+        </div>
+
+        <p class="error-msg" id="login-erro"></p>
+
+        <button class="btn-primary" onclick="entrar()">Entrar na plataforma</button>
+
+        <p class="switch-hint">Não tem conta?&nbsp;<button onclick="switchTo('register')">Cadastre-se aqui</button></p>
+      </div>
+    </div>
+
+    <!-- Cadastro -->
+    <div class="form-register">
+      <div class="form-inner">
+        <div class="logo">
+          <div class="logo-mark">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 3L3 7.5V12C3 16.14 7.02 20.11 12 21C16.98 20.11 21 16.14 21 12V7.5L12 3Z" fill="white" fill-opacity="0.95"/>
+              <path d="M9 12l2 2 4-4" stroke="#3A86FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="logo-text">Controle Financeiro</span>
+        </div>
+
+        <div class="form-heading">Criar sua conta</div>
+        <p class="form-sub">Preencha os dados para se cadastrar</p>
+
+        <div class="field">
+          <label>Nome Completo</label>
+          <input id="reg-nome" type="text" placeholder="Ex: João Silva" />
+        </div>
+        <div class="field">
+          <label>Usuário</label>
+          <input id="reg-user" type="text" placeholder="Ex: joao" />
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input id="reg-senha" type="password" placeholder="Mínimo 4 caracteres" />
+        </div>
+
+        <p class="error-msg" id="reg-erro"></p>
+
+        <button class="btn-primary" onclick="cadastrar()">Criar minha conta</button>
+
+        <p class="switch-hint">Já tem conta?&nbsp;<button onclick="switchTo('login')">Fazer login</button></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CARD PANEL ══ -->
+  <div class="panel card-panel">
+    <div class="blob1"></div>
+    <div class="blob2"></div>
+    <div class="blob3"></div>
+
+    <!-- Card login -->
+    <div class="card-content" id="cardLogin">
+      <div class="card-badge"><span class="dot-b"></span>Portal Familiar</div>
+      <div class="card-title">Seja<br/><span>Bem-vindo!</span></div>
+      <p class="card-desc">Acesse o portal com seu usuário e senha para gerenciar as finanças da família.</p>
+      <button class="btn-card" onclick="switchTo('register')">Não tenho conta</button>
+    </div>
+
+    <!-- Card cadastro -->
+    <div class="card-content hidden" id="cardRegister">
+      <div class="card-badge"><span class="dot-b"></span>Novo Usuário</div>
+      <div class="card-title">Junte-se<br/><span>a nós!</span></div>
+      <p class="card-desc">Crie sua conta e tenha acesso completo ao controle financeiro familiar.</p>
+      <button class="btn-card" onclick="switchTo('login')">Já tenho conta</button>
+    </div>
+
+    <div class="card-dots">
+      <div class="cdot on" id="cdot0"></div>
+      <div class="cdot" id="cdot1"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ LOADING OVERLAY ══ -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="loading-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 3L3 7.5V12C3 16.14 7.02 20.11 12 21C16.98 20.11 21 16.14 21 12V7.5L12 3Z" fill="white" fill-opacity="0.95"/>
+          <path d="M9 12l2 2 4-4" stroke="#3A86FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="loading-spinner">
+      <svg viewBox="0 0 50 50">
+        <defs>
+          <linearGradient id="spinnerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stop-color="#3a86ff"/>
+            <stop offset="100%" stop-color="#8b5cf6"/>
+          </linearGradient>
+        </defs>
+        <circle cx="25" cy="25" r="20" fill="none" stroke-width="3"/>
+      </svg>
+    </div>
+    <p class="loading-text">Entrando<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></p>
+  </div>
+</div>
+
+<script src="login.js"></script>
+</body>
+</html>

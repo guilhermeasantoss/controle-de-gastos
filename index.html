@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controle Financeiro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="app-style.css" />
+  <link rel="shortcut icon" href="img/financial-profit.png" type="image/x-icon">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- ══ TOAST CONTAINER ══ -->
+<div id="toast-container"></div>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sidebar-top">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 3L3 7.5V12C3 16.14 7.02 20.11 12 21C16.98 20.11 21 16.14 21 12V7.5L12 3Z" fill="white" fill-opacity="0.95"/>
+          <path d="M9 12l2 2 4-4" stroke="#3A86FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="logo-text">Controle<br>Financeiro</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="showSection('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="nav-item" onclick="showSection('nova')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <span>Nova Movimentação</span>
+    </button>
+    <button class="nav-item" onclick="showSection('movimentacoes')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><polyline points="3 6 4 7 6 5"/><polyline points="3 12 4 13 6 11"/><polyline points="3 18 4 19 6 17"/></svg>
+      <span>Movimentações</span>
+    </button>
+    <button class="nav-item" onclick="showSection('fatura')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Fatura do Mês</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div class="user-info">
+        <span class="user-name" id="logado">—</span>
+        <span class="user-role">Membro familiar</span>
+      </div>
+    </div>
+    <button class="btn-sair" onclick="sair()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sair
+    </button>
+    <div class="status-bar">
+      <span class="status-dot online" id="status-dot"></span>
+      <span class="status-text" id="status-text">Conectado</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+  <div class="accent-bar"></div>
+
+  <!-- ── DASHBOARD ── -->
+  <section class="section active" id="sec-dashboard">
+    <div class="section-header">
+      <div>
+        <h1 class="section-title">Dashboard</h1>
+        <p class="section-sub">Visão geral das suas finanças</p>
+      </div>
+      <button class="btn-export" onclick="exportarCSV()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar CSV
+      </button>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card green">
+        <div class="summary-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+        <div class="summary-info">
+          <span class="summary-label">Receitas</span>
+          <span class="summary-value">R$ <span id="r">0,00</span></span>
+        </div>
+      </div>
+      <div class="summary-card red">
+        <div class="summary-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
+        <div class="summary-info">
+          <span class="summary-label">Gastos</span>
+          <span class="summary-value">R$ <span id="g">0,00</span></span>
+        </div>
+      </div>
+      <div class="summary-card blue">
+        <div class="summary-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <div class="summary-info">
+          <span class="summary-label">Saldo</span>
+          <span class="summary-value">R$ <span id="s">0,00</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="app-card chart-card">
+        <div class="card-header">
+          <span class="card-title-text">Receitas vs Gastos</span>
+          <div class="card-badge"><span class="dot-b"></span>Geral</div>
+        </div>
+        <div class="chart-wrap"><canvas id="grafico"></canvas></div>
+      </div>
+      <div class="app-card chart-card">
+        <div class="card-header">
+          <span class="card-title-text">Gastos por Categoria</span>
+          <div class="card-badge"><span class="dot-b"></span>Categorias</div>
+        </div>
+        <div class="chart-wrap chart-wrap-bar"><canvas id="grafico-cat"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── NOVA MOVIMENTAÇÃO ── -->
+  <section class="section" id="sec-nova">
+    <div class="section-header">
+      <div>
+        <h1 class="section-title" id="form-titulo">Nova Movimentação</h1>
+        <p class="section-sub">Registre um gasto ou receita</p>
+      </div>
+    </div>
+
+    <div class="app-card form-card">
+      <div class="form-grid">
+        <div class="field full">
+          <label>Tipo</label>
+          <select id="tipo" onchange="toggleParcelas()">
+            <option value="gasto">Gasto à vista</option>
+            <option value="parcelado">Gasto parcelado</option>
+            <option value="receita">Receita</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Descrição *</label>
+          <input id="desc" type="text" placeholder="Ex: Supermercado" />
+        </div>
+        <div class="field">
+          <label>Categoria *</label>
+          <input id="cat" type="text" placeholder="Ex: Alimentação" />
+        </div>
+        <div class="field">
+          <label>Quem gastou / recebeu</label>
+          <input id="pessoa" type="text" placeholder="Ex: Pai" />
+        </div>
+        <div class="field">
+          <label>Valor *</label>
+          <input id="valor" type="text" inputmode="decimal" placeholder="0,00" oninput="mascaraValor(this)" />
+        </div>
+        <div class="field" id="parcelas-wrap" style="display:none">
+          <label>Nº de Parcelas</label>
+          <input id="parcelas" type="number" min="2" placeholder="Mínimo 2" />
+        </div>
+        <div class="field">
+          <label>Data *</label>
+          <input id="data" type="date" />
+        </div>
+      </div>
+
+      <p class="form-error" id="form-erro"></p>
+
+      <div class="form-actions">
+        <button class="btn-ghost" onclick="limpar()">Limpar</button>
+        <button class="btn-ghost" id="btn-cancelar" onclick="cancelarEdicao()" style="display:none;color:var(--red);border-color:rgba(248,113,113,.3)">Cancelar edição</button>
+        <button class="btn-primary" id="btn-salvar" onclick="salvar()">Salvar movimentação</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── MOVIMENTAÇÕES ── -->
+  <section class="section" id="sec-movimentacoes">
+    <div class="section-header">
+      <div>
+        <h1 class="section-title">Movimentações</h1>
+        <p class="section-sub">Histórico completo</p>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="app-card filtros-card">
+      <div class="filtros-grid">
+        <div class="field">
+          <label>Tipo</label>
+          <select id="filtro-tipo" onchange="aplicarFiltros()">
+            <option value="todos">Todos</option>
+            <option value="gasto">Gastos</option>
+            <option value="receita">Receitas</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Pessoa</label>
+          <input id="filtro-pessoa" type="text" placeholder="Ex: Pai" oninput="aplicarFiltros()" />
+        </div>
+        <div class="field">
+          <label>Mês</label>
+          <input id="filtro-mes" type="month" onchange="aplicarFiltros()" />
+        </div>
+        <div class="field" style="display:flex;align-items:flex-end">
+          <button class="btn-ghost" style="width:100%" onclick="limparFiltros()">Limpar filtros</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-card">
+      <div class="mov-toolbar" id="mov-toolbar" style="display:none">
+        <span id="sel-count" style="visibility:hidden">0 selecionados</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn-danger" onclick="removerSelecionados()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            Apagar selecionados
+          </button>
+          <button class="btn-danger btn-danger-all" onclick="removerTudo()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            Apagar tudo
+          </button>
+        </div>
+      </div>
+      <ul class="mov-list" id="lista"></ul>
+      <p class="empty-state" id="lista-empty" style="display:none">Nenhuma movimentação encontrada.</p>
+    </div>
+  </section>
+
+  <!-- ── FATURA DO MÊS ── -->
+  <section class="section" id="sec-fatura">
+    <div class="section-header">
+      <div>
+        <h1 class="section-title">Fatura do Mês</h1>
+        <p class="section-sub">Gastos do mês selecionado</p>
+      </div>
+    </div>
+
+    <!-- Navegação de mês -->
+    <div class="fatura-nav">
+      <button class="btn-mes" onclick="mudarMesFatura(-1)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="fatura-mes-label" id="fatura-mes-label">—</span>
+      <button class="btn-mes" onclick="mudarMesFatura(1)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+
+    <div class="app-card">
+      <ul class="mov-list" id="faturaMes"></ul>
+      <p class="empty-state" id="fatura-empty" style="display:none">Nenhum gasto neste mês.</p>
+      <div class="fatura-total">
+        <span>Total do mês</span>
+        <strong>R$ <span id="totalMes">0,00</span></strong>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="aut.js?v=3"></script>
+</body>
+</html>
