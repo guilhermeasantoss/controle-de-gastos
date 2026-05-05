@@ -24,6 +24,11 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       'http://127.0.0.1:3000'
     ];
 
+// Sempre inclui o domínio Vercel em produção
+if (process.env.NODE_ENV === 'production') {
+  allowedOrigins.push('https://controle-de-gastos-lyart.vercel.app');
+}
+
 app.use(cors({
   origin: (origin, cb) => {
     // permite requisições sem origin (ex: Postman, mobile)
