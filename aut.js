@@ -238,17 +238,21 @@ function atualizarFaturaMes() {
   lista.innerHTML = "";
   let total = 0;
 
+  // Usa dia 1 para evitar bug de overflow (ex: 31 de março + 1 mês = 1 de maio)
   const ref = new Date();
-  ref.setMonth(ref.getMonth() + faturaOffset);
-  const mes = ref.getMonth();
-  const ano = ref.getFullYear();
+  const ano = new Date(ref.getFullYear(), ref.getMonth() + faturaOffset, 1).getFullYear();
+  const mes = new Date(ref.getFullYear(), ref.getMonth() + faturaOffset, 1).getMonth(); // 0-11
 
   const nomesMes = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
   if (labelMes) labelMes.textContent = `${nomesMes[mes]} ${ano}`;
 
   dados.forEach(d => {
     if (d.tipo === "receita") return;
-    const [anoD, mesD, diaD] = String(d.data).substring(0, 10).split("-").map(Number);
+    const partes = String(d.data).substring(0, 10).split("-").map(Number);
+    const anoD = partes[0];
+    const mesD = partes[1]; // 1-12
+    const diaD = partes[2];
+
     if (anoD === ano && mesD === mes + 1) {
       total += parseFloat(d.valor);
       const li = document.createElement("li");

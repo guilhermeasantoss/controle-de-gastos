@@ -108,9 +108,10 @@ app.get('/movimentacoes', auth, (req, res) => {
     SELECT id, tipo, descricao, categoria, pessoa, valor,
            DATE_FORMAT(data, '%Y-%m-%d') as data
     FROM movimentacoes
+    WHERE usuario_id = ?
     ORDER BY data DESC
   `;
-  db.query(sql, (err, rows) => {
+  db.query(sql, [req.user.id], (err, rows) => {
     if (err) { console.error(err); return res.status(500).json({ erro: 'Erro ao buscar' }); }
     res.json(rows);
   });
@@ -122,9 +123,9 @@ app.post('/movimentacoes', auth, (req, res) => {
   if (!tipo || !descricao || !valor || !data)
     return res.status(400).json({ erro: 'Campos obrigatórios: tipo, descricao, valor, data' });
 
-  const sql = `INSERT INTO movimentacoes (tipo, descricao, categoria, pessoa, valor, data)
-               VALUES (?, ?, ?, ?, ?, ?)`;
-  db.query(sql, [tipo, descricao, categoria || null, pessoa || null, valor, data], (err, result) => {
+  const sql = `INSERT INTO movimentacoes (usuario_id, tipo, descricao, categoria, pessoa, valor, data)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`;
+  db.query(sql, [req.user.id, tipo, descricao, categoria || null, pessoa || null, valor, data], (err, result) => {
     if (err) { console.error(err); return res.status(500).json({ erro: 'Erro ao salvar' }); }
     res.status(201).json({ message: 'Salvo!', id: result.insertId });
   });
@@ -138,17 +139,19 @@ app.put('/movimentacoes/:id', auth, (req, res) => {
     return res.status(400).json({ erro: 'Campos obrigatórios ausentes' });
 
   const sql = `UPDATE movimentacoes SET tipo=?, descricao=?, categoria=?, pessoa=?, valor=?, data=?
-               WHERE id=?`;
-  db.query(sql, [tipo, descricao, categoria || null, pessoa || null, valor, data, id], (err) => {
+               WHERE id=? AND usuario_id=?`;
+  db.query(sql, [tipo, descricao, categoria || null, pessoa || null, valor, data, id, req.user.id], (err, result) => {
     if (err) { console.error(err); return res.status(500).json({ erro: 'Erro ao editar' }); }
+    if (result.affectedRows === 0) return res.status(404).json({ erro: 'Movimentação não encontrada' });
     res.json({ message: 'Atualizado!' });
   });
 });
 
 // ── REMOVER MOVIMENTAÇÃO ────────────────────────────
 app.delete('/movimentacoes/:id', auth, (req, res) => {
-  db.query('DELETE FROM movimentacoes WHERE id = ?', [req.params.id], (err) => {
+  db.query('DELETE FROM movimentacoes WHERE id = ? AND usuario_id = ?', [req.params.id, req.user.id], (err, result) => {
     if (err) { console.error(err); return res.status(500).json({ erro: 'Erro ao remover' }); }
+    if (result.affectedRows === 0) return res.status(404).json({ erro: 'Movimentação não encontrada' });
     res.json({ message: 'Removido!' });
   });
 });
@@ -159,11 +162,11 @@ app.get('/categorias', auth, (req, res) => {
     SELECT COALESCE(categoria, 'Sem categoria') as categoria,
            SUM(valor) as total
     FROM movimentacoes
-    WHERE tipo != 'receita'
+    WHERE tipo != 'receita' AND usuario_id = ?
     GROUP BY categoria
     ORDER BY total DESC
   `;
-  db.query(sql, (err, rows) => {
+  db.query(sql, [req.user.id], (err, rows) => {
     if (err) { console.error(err); return res.status(500).json({ erro: 'Erro' }); }
     res.json(rows);
   });
@@ -171,17 +174,19 @@ app.get('/categorias', auth, (req, res) => {
 
 // ── EXPORTAR CSV ────────────────────────────────────
 app.get('/exportar', (req, res) => {
-  // aceita token via header ou query param (para download direto)
   const token = (req.headers['authorization'] || '').split(' ')[1] || req.query.token;
   if (!token) return res.status(401).json({ erro: 'Token ausente' });
-  try { jwt.verify(token, JWT_SECRET); } catch { return res.status(403).json({ erro: 'Token inválido' }); }
+
+  let decoded;
+  try { decoded = jwt.verify(token, JWT_SECRET); }
+  catch { return res.status(403).json({ erro: 'Token inválido' }); }
 
   const sql = `
     SELECT tipo, descricao, categoria, pessoa, valor,
            DATE_FORMAT(data, '%d/%m/%Y') as data
-    FROM movimentacoes ORDER BY data DESC
+    FROM movimentacoes WHERE usuario_id = ? ORDER BY data DESC
   `;
-  db.query(sql, (err, rows) => {
+  db.query(sql, [decoded.id], (err, rows) => {
     if (err) { console.error(err); return res.status(500).json({ erro: 'Erro' }); }
     const header = 'Tipo,Descrição,Categoria,Pessoa,Valor,Data\n';
     const lines  = rows.map(r =>
