@@ -1,4 +1,6 @@
-const API = "http://localhost:3000";
+const API = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  ? "http://localhost:3000"
+  : "https://controle-de-gastos-api.onrender.com"; // ← URL do Render (atualizar após deploy)
 
 // ── AUTH ─────────────────────────────────────────────
 const usuario = JSON.parse(localStorage.getItem("usuarioLogado"));

@@ -1,3 +1,7 @@
+const API = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  ? "http://localhost:3000"
+  : "https://controle-de-gastos-api.onrender.com"; // ← URL do Render (atualizar após deploy)
+
 // Se já estiver logado, redireciona direto
 if (localStorage.getItem("usuarioLogado")) {
   window.location.href = "index.html";
