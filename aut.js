@@ -1,6 +1,4 @@
-const API = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-  ? "http://localhost:3000"
-  : "https://controle-de-gastos-v4z4.onrender.com";
+const API = "https://controle-de-gastos-v4z4.onrender.com";
 
 // ── AUTH ─────────────────────────────────────────────
 const usuario = JSON.parse(localStorage.getItem("usuarioLogado"));
