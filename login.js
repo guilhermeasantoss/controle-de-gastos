@@ -77,7 +77,7 @@ async function entrar() {
   }
 
   try {
-    const res  = await fetch("http://localhost:3000/login", {
+    const res  = await fetch(`${API}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user, senha })
@@ -132,7 +132,7 @@ async function cadastrar() {
   }
 
   try {
-    const res  = await fetch("http://localhost:3000/cadastro", {
+    const res  = await fetch(`${API}/cadastro`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ nome, user, senha })
