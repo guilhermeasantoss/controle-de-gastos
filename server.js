@@ -51,7 +51,7 @@ if (supabaseUrl && supabaseServiceKey) {
 
 const allowedOrigins = new Set(
   (process.env.CORS_ORIGINS
-    || 'http://localhost:5500,http://127.0.0.1:5500,https://controle-de-gastos-ekvr.vercel.app,https://controle-de-gastos-4qq3.vercel.app,https://cgasto.vercel.app')
+    || 'http://localhost:5500,http://127.0.0.1:5500,https://controle-de-gastos-ekvr.vercel.app,https://controle-de-gastos-4qq3.vercel.app,https://cgasto.vercel.app,https://cgasto-financeiro.vercel.app')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
