@@ -113,6 +113,8 @@ Abra o arquivo `login.html` no navegador ou use uma extensão como Live Server n
 SUPABASE_URL=https://seu-projeto.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=sua_chave_service_role
 JWT_SECRET=uma_chave_aleatoria_com_pelo_menos_32_caracteres
+COHERE_API_KEY=sua_chave_da_cohere
+COHERE_MODEL=command-a-03-2025
 NODE_ENV=production
 ```
 
