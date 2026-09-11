@@ -333,27 +333,32 @@ async function listMovimentacoesForExport(userId) {
 app.get('/', (req, res) => res.send('API Controle de Gastos 🚀'));
 
 app.post('/login', loginRateLimit, async (req, res) => {
-  const body = req.body || {};
-  const user = typeof body.user === 'string' ? body.user.trim() : '';
-  const senha = typeof body.senha === 'string' ? body.senha : '';
-  if (!user || !senha) {
-    return res.status(400).json({ erro: 'Usuário e senha são obrigatórios' });
-  }
+  try {
+    const body = req.body || {};
+    const user = typeof body.user === 'string' ? body.user.trim() : '';
+    const senha = typeof body.senha === 'string' ? body.senha : '';
+    if (!user || !senha) {
+      return res.status(400).json({ erro: 'Usuário e senha são obrigatórios' });
+    }
 
-  const login = user.toLowerCase();
-  const { data, error } = await findUserByLogin(login);
-  if (error || !data) {
-    return res.status(401).json({ erro: 'Usuário ou senha inválidos' });
-  }
+    const login = user.toLowerCase();
+    const { data, error } = await findUserByLogin(login);
+    if (error || !data) {
+      return res.status(401).json({ erro: 'Usuário ou senha inválidos' });
+    }
 
-  const senhaOk = await bcrypt.compare(senha, data.senha);
-  if (!senhaOk) {
-    return res.status(401).json({ erro: 'Usuário ou senha inválidos' });
-  }
+    const senhaOk = await bcrypt.compare(senha, data.senha);
+    if (!senhaOk) {
+      return res.status(401).json({ erro: 'Usuário ou senha inválidos' });
+    }
 
-  loginAttempts.delete(`${req.ip}:${user.toLowerCase()}`);
-  const token = jwt.sign({ id: data.id, user: data.user }, JWT_SECRET, { expiresIn: '8h' });
-  return res.json({ usuario: { id: data.id, user: data.user, email: data.email, nome: data.nome }, token });
+    loginAttempts.delete(`${req.ip}:${user.toLowerCase()}`);
+    const token = jwt.sign({ id: data.id, user: data.user }, JWT_SECRET, { expiresIn: '8h' });
+    return res.json({ usuario: { id: data.id, user: data.user, email: data.email, nome: data.nome }, token });
+  } catch (error) {
+    console.error('Login failed:', error);
+    return res.status(500).json({ erro: 'Erro interno ao autenticar' });
+  }
 });
 
 app.post('/chat', auth, async (req, res) => {
