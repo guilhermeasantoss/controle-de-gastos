@@ -427,29 +427,37 @@ app.post('/chat', auth, async (req, res) => {
 });
 
 app.post('/cadastro', async (req, res) => {
-  const { nome, user, email, senha } = req.body || {};
-  const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
-  const validationError = validateUser({ nome, user, email: normalizedEmail, senha });
-  if (validationError) return res.status(400).json({ erro: validationError });
+  try {
+    const { nome, user, email, senha } = req.body || {};
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    const validationError = validateUser({ nome, user, email: normalizedEmail, senha });
+    if (validationError) return res.status(400).json({ erro: validationError });
 
-  const hash = await bcrypt.hash(senha, 12);
-  const { error } = await createUser({
-    nome: nome.trim(),
-    user: user.trim(),
-    email: normalizedEmail,
-    senhaHash: hash,
-  });
+    const hash = await bcrypt.hash(senha, 12);
+    const { error } = await createUser({
+      nome: nome.trim(),
+      user: user.trim(),
+      email: normalizedEmail,
+      senhaHash: hash,
+    });
 
-  if (error) {
-    const code = error.code || error.errno;
-    if (code === '23505' || code === 1062) {
-      return res.status(409).json({ erro: 'Usuário ou e-mail já existe' });
+    if (error) {
+      const code = error.code || error.errno;
+      if (code === '23505' || code === 1062) {
+        return res.status(409).json({ erro: 'Usuário ou e-mail já existe' });
+      }
+      if (code === '42703' || /email.*column|column.*email/i.test(error.message || '')) {
+        return res.status(503).json({ erro: 'Banco desatualizado: adicione a coluna email no Supabase' });
+      }
+      console.error(error);
+      return res.status(500).json({ erro: 'Erro ao criar conta' });
     }
-    console.error(error);
-    return res.status(500).json({ erro: 'Erro ao criar conta' });
-  }
 
-  return res.status(201).json({ message: 'Conta criada com sucesso!' });
+    return res.status(201).json({ message: 'Conta criada com sucesso!' });
+  } catch (error) {
+    console.error('Cadastro failed:', error);
+    return res.status(500).json({ erro: 'Erro interno ao criar conta' });
+  }
 });
 
 app.get('/movimentacoes', auth, async (req, res) => {

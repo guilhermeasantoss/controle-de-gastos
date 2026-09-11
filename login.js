@@ -89,7 +89,13 @@ async function entrar() {
       body: JSON.stringify({ user, senha })
     });
 
-    const data = await res.json();
+    const raw = await res.text();
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      throw new Error(`Resposta inválida do servidor (${res.status})`);
+    }
 
     if (!res.ok) {
       erroEl.textContent = data.erro || "Usuário ou senha inválidos.";
@@ -145,7 +151,13 @@ async function cadastrar() {
       body: JSON.stringify({ nome, user, email, senha })
     });
 
-    const data = await res.json();
+    const raw = await res.text();
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      throw new Error(`Resposta inválida do servidor (${res.status})`);
+    }
 
     if (!res.ok) {
       erroEl.textContent = data.erro || "Erro ao criar conta.";
