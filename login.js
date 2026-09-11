@@ -1,4 +1,10 @@
-const API = "https://controle-de-gastos-v4z4.onrender.com";
+const API = (() => {
+  const { hostname } = window.location;
+  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:3000';
+  }
+  return '/api';
+})();
 
 // Se já estiver logado, redireciona direto
 if (localStorage.getItem("usuarioLogado")) {
@@ -126,8 +132,8 @@ async function cadastrar() {
     erroEl.textContent = "Preencha todos os campos.";
     return;
   }
-  if (senha.length < 4) {
-    erroEl.textContent = "A senha deve ter no mínimo 4 caracteres.";
+  if (senha.length < 8) {
+    erroEl.textContent = "A senha deve ter no mínimo 8 caracteres.";
     return;
   }
 

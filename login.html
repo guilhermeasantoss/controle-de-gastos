@@ -34,11 +34,11 @@
 
         <div class="field">
           <label>Usuário</label>
-          <input id="login-user" type="text" placeholder="ex: pai" />
+          <input id="login-user" type="text" autocomplete="username" placeholder="ex: joao" />
         </div>
         <div class="field">
           <label>Senha</label>
-          <input id="login-senha" type="password" placeholder="••••••••" />
+          <input id="login-senha" type="password" autocomplete="current-password" placeholder="••••••••" />
         </div>
 
         <p class="error-msg" id="login-erro"></p>
@@ -67,15 +67,15 @@
 
         <div class="field">
           <label>Nome Completo</label>
-          <input id="reg-nome" type="text" placeholder="Ex: João Silva" />
+          <input id="reg-nome" type="text" autocomplete="name" maxlength="100" placeholder="Ex: João Silva" />
         </div>
         <div class="field">
           <label>Usuário</label>
-          <input id="reg-user" type="text" placeholder="Ex: joao" />
+          <input id="reg-user" type="text" autocomplete="username" maxlength="50" pattern="[A-Za-z0-9_.-]+" placeholder="Ex: joao" />
         </div>
         <div class="field">
           <label>Senha</label>
-          <input id="reg-senha" type="password" placeholder="Mínimo 4 caracteres" />
+          <input id="reg-senha" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo 8 caracteres" />
         </div>
 
         <p class="error-msg" id="reg-erro"></p>
@@ -143,6 +143,6 @@
   </div>
 </div>
 
-<script src="login.js?v=4"></script>
+<script src="login.js?v=5"></script>
 </body>
 </html>

@@ -1,8 +1,23 @@
-const API = "https://controle-de-gastos-v4z4.onrender.com";
+const API = (() => {
+  const { hostname } = window.location;
+  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:3000';
+  }
+  return '/api';
+})();
 
 // ── AUTH ─────────────────────────────────────────────
-const usuario = JSON.parse(localStorage.getItem("usuarioLogado"));
-if (!usuario) window.location.href = "login.html";
+let usuario = null;
+try {
+  usuario = JSON.parse(localStorage.getItem("usuarioLogado") || "null");
+} catch {
+  localStorage.removeItem("usuarioLogado");
+  localStorage.removeItem("cf_token");
+}
+if (!usuario || typeof usuario.nome !== "string") {
+  window.location.href = "login.html";
+  usuario = { nome: "" };
+}
 
 function getToken() {
   return localStorage.getItem("cf_token") || "";
@@ -21,16 +36,19 @@ function sair() {
 }
 
 // ── NAVEGAÇÃO ─────────────────────────────────────────
-function showSection(id) {
+function showSection(id, navItem) {
   document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
   document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
-  document.getElementById("sec-" + id).classList.add("active");
-  event.currentTarget.classList.add("active");
+  const section = document.getElementById("sec-" + id);
+  if (!section) return;
+  section.classList.add("active");
+  if (navItem) navItem.classList.add("active");
 }
 
 // ── MOEDA ─────────────────────────────────────────────
 function formatBRL(v) {
-  return parseFloat(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const value = Number(v);
+  return (Number.isFinite(value) ? value : 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function mascaraValor(input) {
   let v = input.value.replace(/\D/g, "");
@@ -38,6 +56,37 @@ function mascaraValor(input) {
 }
 function parseBRL(str) {
   return parseFloat(String(str).replace(/\./g, "").replace(",", "."));
+}
+
+function escapeHtml(value) {
+  const text = String(value ?? "");
+  return text.replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  }[char]));
+}
+
+function parseDateInput(value) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function formatDateInput(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function addMonthsKeepingDay(date, months) {
+  const result = new Date(date.getFullYear(), date.getMonth() + months, 1);
+  const lastDay = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
+  result.setDate(Math.min(date.getDate(), lastDay));
+  return result;
 }
 
 // ── TOAST ─────────────────────────────────────────────
@@ -102,22 +151,36 @@ async function salvar() {
   } else {
     const parcelas = Number(document.getElementById("parcelas").value);
     if (!parcelas || parcelas < 2) { erroEl.textContent = "Informe o número de parcelas (mínimo 2)."; return; }
-    const vParcela   = valorTotal / parcelas;
-    const dataInicial = new Date(data);
+    const totalCentavos = Math.round(valorTotal * 100);
+    const centavosBase = Math.floor(totalCentavos / parcelas);
+    const resto = totalCentavos % parcelas;
+    const dataInicial = parseDateInput(data);
     for (let i = 0; i < parcelas; i++) {
-      const d = new Date(dataInicial.getFullYear(), dataInicial.getMonth() + i, dataInicial.getDate());
-      registros.push({ tipo: "gasto", desc: `${desc} (${i+1}/${parcelas})`, cat, pessoa, valor: vParcela, data: d.toISOString().split("T")[0] });
+      const d = addMonthsKeepingDay(dataInicial, i);
+      const valorParcela = (centavosBase + (i < resto ? 1 : 0)) / 100;
+      registros.push({ tipo: "gasto", desc: `${desc} (${i+1}/${parcelas})`, cat, pessoa, valor: valorParcela, data: formatDateInput(d) });
     }
   }
 
   try {
-    for (const reg of registros) {
-      const res = await fetch(`${API}/movimentacoes`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ tipo: reg.tipo, descricao: reg.desc, categoria: reg.cat, pessoa: reg.pessoa, valor: reg.valor, data: reg.data })
-      });
-      if (!res.ok) { const e = await res.json(); erroEl.textContent = e.erro || "Erro ao salvar."; return; }
+    const res = await fetch(`${API}/movimentacoes/lote`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({
+        movimentacoes: registros.map((reg) => ({
+          tipo: reg.tipo,
+          descricao: reg.desc,
+          categoria: reg.cat,
+          pessoa: reg.pessoa,
+          valor: reg.valor,
+          data: reg.data,
+        })),
+      }),
+    });
+    if (!res.ok) {
+      const e = await res.json();
+      erroEl.textContent = e.erro || "Erro ao salvar.";
+      return;
     }
     limpar();
     toast("Movimentação salva!");
@@ -161,9 +224,13 @@ function cancelarEdicao() {
 async function atualizar() {
   try {
     const res = await fetch(`${API}/movimentacoes`, { headers: authHeaders() });
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) sair();
+      throw new Error(`Falha ao buscar movimentações: ${res.status}`);
+    }
     dados = await res.json();
-  } catch {
+  } catch (error) {
+    console.error(error);
     dados = [];
     return false;
   }
@@ -200,8 +267,8 @@ function renderLista() {
         <input type="checkbox" onchange="toggleSelecao(this)" value="${d.id}" />
         <span class="checkmark"></span>
       </label>
-      <span>${d.pessoa ? "<strong>" + d.pessoa + "</strong> · " : ""}${d.descricao}
-        <em style="color:var(--muted);font-size:11px">${d.categoria ? " · " + d.categoria : ""} (${d.tipo})</em>
+      <span>${d.pessoa ? "<strong>" + escapeHtml(d.pessoa) + "</strong> · " : ""}${escapeHtml(d.descricao)}
+        <em style="color:var(--muted);font-size:11px">${d.categoria ? " · " + escapeHtml(d.categoria) : ""} (${escapeHtml(d.tipo)})</em>
       </span>
       <span class="mov-valor ${d.tipo === 'receita' ? 'verde' : 'vermelho'}">R$ ${formatBRL(d.valor)}</span>
       <button class="btn-edit" onclick="editarMovimentacao(${d.id})" title="Editar">✎</button>
@@ -257,7 +324,7 @@ function atualizarFaturaMes() {
       total += parseFloat(d.valor);
       const li = document.createElement("li");
       li.innerHTML = `
-        <span>${d.pessoa ? "<strong>" + d.pessoa + "</strong> · " : ""}${d.descricao}
+        <span>${d.pessoa ? "<strong>" + escapeHtml(d.pessoa) + "</strong> · " : ""}${escapeHtml(d.descricao)}
           <em style="color:var(--muted);font-size:11px">(dia ${String(diaD).padStart(2,"0")})</em>
         </span>
         <strong style="color:var(--red);white-space:nowrap;flex-shrink:0">R$ ${formatBRL(d.valor)}</strong>
@@ -293,6 +360,10 @@ function atualizarGrafico() {
 async function atualizarGraficoCategorias() {
   try {
     const res  = await fetch(`${API}/categorias`, { headers: authHeaders() });
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) sair();
+      throw new Error(`Falha ao buscar categorias: ${res.status}`);
+    }
     const cats = await res.json();
 
     if (graficoCat) graficoCat.destroy();
@@ -321,7 +392,9 @@ async function atualizarGraficoCategorias() {
         }
       }
     });
-  } catch { /* silencioso */ }
+  } catch (error) {
+    console.error("Erro ao carregar categorias:", error);
+  }
 }
 
 // ── REMOÇÃO ───────────────────────────────────────────
@@ -340,7 +413,12 @@ async function removerSelecionados() {
 
 async function deletarIds(ids) {
   try {
-    await Promise.all(ids.map(id => fetch(`${API}/movimentacoes/${id}`, { method: "DELETE", headers: authHeaders() })));
+    const respostas = await Promise.all(ids.map(id => fetch(`${API}/movimentacoes/${id}`, { method: "DELETE", headers: authHeaders() })));
+    const falhas = respostas.filter((res) => !res.ok);
+    if (falhas.length) {
+      if (falhas.some((res) => res.status === 401 || res.status === 403)) sair();
+      throw new Error("Uma ou mais movimentações não puderam ser removidas.");
+    }
     toast(ids.length > 1 ? `${ids.length} movimentações removidas.` : "Movimentação removida.", "error");
     await atualizar();
   } catch { toast("Erro ao remover.", "error"); }
@@ -367,12 +445,21 @@ function limparFiltros() {
 
 // ── EXPORTAR CSV ──────────────────────────────────────
 function exportarCSV() {
-  const a = document.createElement("a");
-  a.href = `${API}/exportar`;
-  // passa token via query param pois é download direto
-  a.href = `${API}/exportar?token=${getToken()}`;
-  a.download = "movimentacoes.csv";
-  a.click();
+  fetch(`${API}/exportar`, { headers: { Authorization: "Bearer " + getToken() } })
+    .then(async (res) => {
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) sair();
+        throw new Error("Não foi possível exportar.");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "movimentacoes.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    })
+    .catch(() => toast("Erro ao exportar.", "error"));
 }
 
 // ── LIMPAR FORM ───────────────────────────────────────

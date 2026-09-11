@@ -4,13 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
+    "@supabase/server": "^1.6.0",
     "@supabase/supabase-js": "2.105.3",
     "bcryptjs": "3.0.3",
     "cors": "^2.8.6",
