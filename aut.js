@@ -229,9 +229,11 @@ async function atualizar() {
       throw new Error(`Falha ao buscar movimentações: ${res.status}`);
     }
     dados = await res.json();
+    window.dados = dados;
   } catch (error) {
     console.error(error);
     dados = [];
+    window.dados = dados;
     return false;
   }
 

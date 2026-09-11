@@ -265,6 +265,23 @@
 
 </main>
 
+<button class="chatbot-toggle" id="chatbotToggle" type="button" aria-label="Abrir assistente financeiro">💬</button>
+<section class="chatbot-panel" id="chatbotPanel" aria-label="Assistente financeiro">
+  <header class="chatbot-header">
+    <div>
+      <strong>Assistente financeiro</strong>
+      <span>Respostas baseadas nas suas movimentações</span>
+    </div>
+    <button class="chatbot-close" id="chatbotClose" type="button" aria-label="Fechar assistente">&times;</button>
+  </header>
+  <div class="chatbot-messages" id="chatbotMessages"></div>
+  <form class="chatbot-form" id="chatbotForm">
+    <input class="chatbot-input" id="chatbotInput" autocomplete="off" placeholder="Ex.: quanto gastei?" />
+    <button class="chatbot-send" type="submit">Enviar</button>
+  </form>
+</section>
+
 <script src="aut.js?v=3"></script>
+<script src="chatbot.js?v=1"></script>
 </body>
 </html>
