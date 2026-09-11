@@ -333,8 +333,9 @@ async function listMovimentacoesForExport(userId) {
 app.get('/', (req, res) => res.send('API Controle de Gastos 🚀'));
 
 app.post('/login', loginRateLimit, async (req, res) => {
-  const user = typeof req.body.user === 'string' ? req.body.user.trim() : '';
-  const senha = typeof req.body.senha === 'string' ? req.body.senha : '';
+  const body = req.body || {};
+  const user = typeof body.user === 'string' ? body.user.trim() : '';
+  const senha = typeof body.senha === 'string' ? body.senha : '';
   if (!user || !senha) {
     return res.status(400).json({ erro: 'Usuário e senha são obrigatórios' });
   }
@@ -426,7 +427,7 @@ app.post('/chat', auth, async (req, res) => {
 });
 
 app.post('/cadastro', async (req, res) => {
-  const { nome, user, email, senha } = req.body;
+  const { nome, user, email, senha } = req.body || {};
   const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
   const validationError = validateUser({ nome, user, email: normalizedEmail, senha });
   if (validationError) return res.status(400).json({ erro: validationError });
