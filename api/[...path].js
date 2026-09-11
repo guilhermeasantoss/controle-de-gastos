@@ -4,5 +4,10 @@ module.exports = (req, res) => {
   if (req.url.startsWith('/api')) {
     req.url = req.url.slice(4) || '/';
   }
-  return app(req, res);
+  try {
+    return app(req, res);
+  } catch (error) {
+    console.error('API function error:', error);
+    return res.status(500).json({ erro: 'Erro interno no servidor' });
+  }
 };

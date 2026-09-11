@@ -603,6 +603,12 @@ app.get('/exportar', auth, async (req, res) => {
   return res.send('\uFEFF' + header + lines);
 });
 
+app.use((error, req, res, next) => {
+  console.error('Unhandled API error:', error);
+  if (res.headersSent) return next(error);
+  return res.status(500).json({ erro: 'Erro interno no servidor' });
+});
+
 if (require.main === module) {
   app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));
 }
