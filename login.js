@@ -3,7 +3,7 @@ const API = (() => {
   if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:3000';
   }
-  return '/api';
+  return 'https://controle-de-gastos-v4z4.onrender.com';
 })();
 
 // Se já estiver logado, redireciona direto
