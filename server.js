@@ -141,41 +141,56 @@ function validateMovement(body = {}) {
   return { value: normalized };
 }
 
-function validateUser({ nome, user, senha }) {
-  if (typeof nome !== 'string' || typeof user !== 'string' || typeof senha !== 'string') {
+function validateUser({ nome, user, email, senha }) {
+  if (typeof nome !== 'string' || typeof user !== 'string' || typeof email !== 'string' || typeof senha !== 'string') {
     return 'Preencha todos os campos';
   }
-  if (!nome.trim() || !user.trim() || !senha) return 'Preencha todos os campos';
-  if (nome.trim().length > 100 || user.trim().length > 50) return 'Nome ou usuário excede o limite permitido';
+  if (!nome.trim() || !user.trim() || !email.trim() || !senha) return 'Preencha todos os campos';
+  if (nome.trim().length > 100 || user.trim().length > 50 || email.trim().length > 254) {
+    return 'Nome, usuário ou e-mail excede o limite permitido';
+  }
   if (!/^[A-Za-z0-9_.-]+$/.test(user.trim())) return 'Usuário contém caracteres inválidos';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return 'E-mail inválido';
   if (senha.length < 8) return 'A senha deve ter no mínimo 8 caracteres';
   return null;
 }
 
-async function findUserByUsername(user) {
+async function findUserByLogin(login) {
   if (supabase) {
-    const { data, error } = await supabase
+    const byUser = await supabase
       .from('usuarios')
-      .select('id, user, nome, senha')
-      .eq('user', user)
-      .single();
-    return { data, error };
+      .select('id, user, email, nome, senha')
+      .eq('user', login)
+      .maybeSingle();
+    if (byUser.error || byUser.data) return byUser;
+
+    return supabase
+      .from('usuarios')
+      .select('id, user, email, nome, senha')
+      .eq('email', login)
+      .maybeSingle();
   }
 
-  const [rows] = await mysqlPool.execute('SELECT id, user, nome, senha FROM usuarios WHERE user = ? LIMIT 1', [user]);
+  const [rows] = await mysqlPool.execute(
+    'SELECT id, user, email, nome, senha FROM usuarios WHERE user = ? OR email = ? LIMIT 1',
+    [login, login],
+  );
   return { data: rows[0] || null, error: null };
 }
 
-async function createUser({ nome, user, senhaHash }) {
+async function createUser({ nome, user, email, senhaHash }) {
   if (supabase) {
     const { error } = await supabase
       .from('usuarios')
-      .insert([{ user, senha: senhaHash, nome }]);
+      .insert([{ user, email, senha: senhaHash, nome }]);
     return { error };
   }
 
   try {
-    await mysqlPool.execute('INSERT INTO usuarios (user, senha, nome) VALUES (?, ?, ?)', [user, senhaHash, nome]);
+    await mysqlPool.execute(
+      'INSERT INTO usuarios (user, email, senha, nome) VALUES (?, ?, ?, ?)',
+      [user, email, senhaHash, nome],
+    );
     return { error: null };
   } catch (error) {
     return { error };
@@ -324,7 +339,8 @@ app.post('/login', loginRateLimit, async (req, res) => {
     return res.status(400).json({ erro: 'Usuário e senha são obrigatórios' });
   }
 
-  const { data, error } = await findUserByUsername(user);
+  const login = user.toLowerCase();
+  const { data, error } = await findUserByLogin(login);
   if (error || !data) {
     return res.status(401).json({ erro: 'Usuário ou senha inválidos' });
   }
@@ -336,21 +352,27 @@ app.post('/login', loginRateLimit, async (req, res) => {
 
   loginAttempts.delete(`${req.ip}:${user.toLowerCase()}`);
   const token = jwt.sign({ id: data.id, user: data.user }, JWT_SECRET, { expiresIn: '8h' });
-  return res.json({ usuario: { id: data.id, user: data.user, nome: data.nome }, token });
+  return res.json({ usuario: { id: data.id, user: data.user, email: data.email, nome: data.nome }, token });
 });
 
 app.post('/cadastro', async (req, res) => {
-  const { nome, user, senha } = req.body;
-  const validationError = validateUser({ nome, user, senha });
+  const { nome, user, email, senha } = req.body;
+  const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  const validationError = validateUser({ nome, user, email: normalizedEmail, senha });
   if (validationError) return res.status(400).json({ erro: validationError });
 
   const hash = await bcrypt.hash(senha, 12);
-  const { error } = await createUser({ nome: nome.trim(), user: user.trim(), senhaHash: hash });
+  const { error } = await createUser({
+    nome: nome.trim(),
+    user: user.trim(),
+    email: normalizedEmail,
+    senhaHash: hash,
+  });
 
   if (error) {
     const code = error.code || error.errno;
     if (code === '23505' || code === 1062) {
-      return res.status(409).json({ erro: 'Usuário já existe' });
+      return res.status(409).json({ erro: 'Usuário ou e-mail já existe' });
     }
     console.error(error);
     return res.status(500).json({ erro: 'Erro ao criar conta' });

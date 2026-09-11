@@ -122,13 +122,14 @@ function showLoading(callback) {
 async function cadastrar() {
   const nome   = document.getElementById("reg-nome").value.trim();
   const user   = document.getElementById("reg-user").value.trim();
+  const email  = document.getElementById("reg-email").value.trim();
   const senha  = document.getElementById("reg-senha").value.trim();
   const erroEl = document.getElementById("reg-erro");
 
   erroEl.style.color = "#f87171";
   erroEl.textContent = "";
 
-  if (!nome || !user || !senha) {
+  if (!nome || !user || !email || !senha) {
     erroEl.textContent = "Preencha todos os campos.";
     return;
   }
@@ -141,7 +142,7 @@ async function cadastrar() {
     const res  = await fetch(`${API}/cadastro`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome, user, senha })
+      body: JSON.stringify({ nome, user, email, senha })
     });
 
     const data = await res.json();
