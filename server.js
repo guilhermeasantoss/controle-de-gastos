@@ -355,6 +355,76 @@ app.post('/login', loginRateLimit, async (req, res) => {
   return res.json({ usuario: { id: data.id, user: data.user, email: data.email, nome: data.nome }, token });
 });
 
+app.post('/chat', auth, async (req, res) => {
+  const message = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+  if (!message || message.length > 1000) {
+    return res.status(400).json({ erro: 'Mensagem inválida' });
+  }
+  if (!process.env.COHERE_API_KEY) {
+    return res.status(503).json({ erro: 'Assistente de IA não configurado' });
+  }
+
+  const { data, error } = await listMovimentacoesByUser(req.user.id);
+  if (error) {
+    console.error(error);
+    return res.status(500).json({ erro: 'Não foi possível carregar seus dados financeiros' });
+  }
+
+  const context = (data || []).slice(0, 100).map((item) => ({
+    tipo: item.tipo,
+    descricao: item.descricao,
+    categoria: item.categoria,
+    pessoa: item.pessoa,
+    valor: Number(item.valor),
+    data: item.data,
+  }));
+
+  try {
+    const cohereResponse = await fetch('https://api.cohere.com/v2/chat', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.COHERE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: process.env.COHERE_MODEL || 'command-a-03-2025',
+        temperature: 0.2,
+        messages: [
+          {
+            role: 'system',
+            content: 'Você é um assistente financeiro do sistema Controle Financeiro. Responda em português do Brasil, com clareza e objetividade. Use apenas os dados fornecidos. Não invente valores, não dê recomendações de investimento e deixe claro quando não houver dados suficientes.',
+          },
+          {
+            role: 'user',
+            content: `Movimentações do usuário:\n${JSON.stringify(context)}\n\nPergunta: ${message}`,
+          },
+        ],
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    const result = await cohereResponse.json();
+    if (!cohereResponse.ok) {
+      console.error('Cohere error:', cohereResponse.status, result);
+      return res.status(502).json({ erro: 'O assistente de IA está indisponível' });
+    }
+
+    const answer = result.message?.content
+      ?.filter((part) => part.type === 'text')
+      ?.map((part) => part.text)
+      ?.join('\n')
+      ?.trim();
+    if (!answer) {
+      return res.status(502).json({ erro: 'O assistente não retornou uma resposta' });
+    }
+
+    return res.json({ resposta: answer });
+  } catch (requestError) {
+    console.error('Cohere request failed:', requestError);
+    return res.status(502).json({ erro: 'Não foi possível conectar ao assistente de IA' });
+  }
+});
+
 app.post('/cadastro', async (req, res) => {
   const { nome, user, email, senha } = req.body;
   const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
