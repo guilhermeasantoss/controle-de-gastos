@@ -51,7 +51,7 @@ if (supabaseUrl && supabaseServiceKey) {
 
 const allowedOrigins = new Set(
   (process.env.CORS_ORIGINS
-    || 'http://localhost:5500,http://127.0.0.1:5500,https://controle-de-gastos-ekvr.vercel.app')
+    || 'http://localhost:5500,http://127.0.0.1:5500,https://controle-de-gastos-ekvr.vercel.app,https://controle-de-gastos-4qq3.vercel.app,https://cgasto.vercel.app')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
@@ -448,6 +448,9 @@ app.post('/cadastro', async (req, res) => {
       }
       if (code === '42703' || /email.*column|column.*email/i.test(error.message || '')) {
         return res.status(503).json({ erro: 'Banco desatualizado: adicione a coluna email no Supabase' });
+      }
+      if (code === 'PGRST205' || /could not find the table.*usuarios/i.test(error.message || '')) {
+        return res.status(503).json({ erro: 'Tabela usuarios não existe no Supabase' });
       }
       console.error(error);
       return res.status(500).json({ erro: 'Erro ao criar conta' });
