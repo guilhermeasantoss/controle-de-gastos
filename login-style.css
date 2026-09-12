@@ -357,12 +357,17 @@ body {
    MOBILE  < 768px
 ═══════════════════════════════════════════════ */
 @media (max-width: 767px) {
-  html, body { overflow: auto; }
+  html, body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    min-height: 100%;
+  }
 
   .auth-wrapper {
     flex-direction: column;
-    height: 100%;
+    height: auto;
     min-height: 100vh;
+    min-height: 100dvh;
   }
 
   .panel {
@@ -383,6 +388,7 @@ body {
   .form-panel {
     left: auto;
     height: auto;
+    min-height: 62vh;
     flex: 1;
     order: 1;
     transform: none !important;
@@ -397,6 +403,7 @@ body {
     overflow-y: auto;
     padding: 28px 24px 32px;
     align-items: flex-start;
+    scrollbar-width: thin;
   }
 
   .form-inner { max-width: 100%; padding: 0; }

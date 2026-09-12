@@ -22,6 +22,7 @@ html, body {
   font-family: 'Plus Jakarta Sans', sans-serif;
   background: var(--bg);
   color: var(--text);
+  overflow-x: hidden;
 }
 
 /* ══ ASSISTENTE FINANCEIRO ══ */
@@ -440,6 +441,7 @@ body {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .btn-primary {
@@ -496,7 +498,13 @@ body {
 }
 .mov-list li:hover { background: rgba(255,255,255,.03); }
 
-.mov-list li span { flex: 1; padding-right: 12px; line-height: 1.4; }
+.mov-list li span {
+  flex: 1;
+  min-width: 0;
+  padding-right: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
 
 .mov-list li button {
   width: 32px; height: 32px;
@@ -551,26 +559,47 @@ body {
     height: 60px;
     flex-direction: row;
     align-items: center;
-    padding: 0 16px;
+    padding: 0 10px;
     bottom: auto;
     border-right: none;
     border-bottom: 1px solid var(--border);
   }
-  .sidebar-top { margin-bottom: 0; margin-right: 16px; padding: 0; }
+  .sidebar-top { margin-bottom: 0; margin-right: 8px; padding: 0; }
   .logo-text { display: none; }
-  .sidebar-nav { flex-direction: row; gap: 2px; flex: 1; }
+  .sidebar-nav { flex-direction: row; gap: 2px; flex: 1; min-width: 0; }
   .nav-item span { display: none; }
-  .nav-item { padding: 8px; justify-content: center; }
-  .sidebar-bottom { flex-direction: row; gap: 8px; }
+  .nav-item { flex: 1; min-width: 0; padding: 8px 4px; justify-content: center; }
+  .sidebar-bottom { flex-direction: row; gap: 4px; flex-shrink: 0; }
   .user-info, .user-role { display: none; }
   .user-card { padding: 6px; background: none; border: none; }
-  .btn-sair span { display: none; }
-  .btn-sair { padding: 8px; width: auto; }
+  .btn-sair { padding: 8px; width: auto; font-size: 0; }
+  .status-bar { display: none; }
 
   .main { margin-left: 0; margin-top: 60px; }
+  .section { gap: 18px; padding: 22px 14px; }
+  .section-header { gap: 12px; }
+  .app-card { padding: 16px; border-radius: 14px; }
   .summary-grid { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
   .field.full { grid-column: 1; }
+  .form-actions { justify-content: stretch; }
+  .form-actions > button { flex: 1; min-width: 120px; }
+  .filtros-card { padding: 16px; }
+  .mov-toolbar { align-items: flex-start; flex-wrap: wrap; gap: 10px; }
+  .mov-toolbar > div { flex-wrap: wrap; }
+  .btn-danger { padding: 8px 10px; font-size: 11px; }
+  .mov-list li { padding: 12px; }
+  .mov-valor { margin-left: 4px; margin-right: 6px; }
+  .fatura-mes-label { min-width: 0; font-size: 16px; }
+  .chatbot-toggle { right: 14px; bottom: 14px; }
+  .chatbot-panel {
+    right: 12px;
+    bottom: 78px;
+    width: calc(100vw - 24px);
+    height: min(480px, calc(100dvh - 96px));
+  }
+  #toast-container { left: 14px; right: 14px; bottom: 14px; }
+  .toast { max-width: none; }
 }
 
 /* ══ TOOLBAR DE SELEÇÃO ══ */
@@ -835,5 +864,18 @@ body {
 @media (max-width: 768px) {
   .charts-row { grid-template-columns: 1fr; }
   .filtros-grid { grid-template-columns: 1fr; }
-  .btn-export span { display: none; }
+  .btn-export { padding: 9px 12px; font-size: 12px; }
+}
+
+@media (max-width: 380px) {
+  .sidebar { padding: 0 6px; }
+  .sidebar-top { margin-right: 4px; }
+  .logo-mark { width: 34px; height: 34px; }
+  .nav-item { padding-left: 2px; padding-right: 2px; }
+  .nav-item svg { width: 17px; height: 17px; }
+  .section-title { font-size: 21px; }
+  .section-sub { font-size: 12px; }
+  .btn-export { padding: 8px; font-size: 11px; }
+  .btn-danger { padding-left: 8px; padding-right: 8px; }
+  .btn-danger svg { display: none; }
 }
